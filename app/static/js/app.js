@@ -28,6 +28,71 @@ Vue.component('app-footer', {
     `
 });
 
+Vue.component('upload-form', {
+    template:`
+    <form id="uploadForm"  @submit.prevent="UploadForm"  enctype="multipart/form-data">
+     <label for = "image" class="btn btn-primary">Browse</label><span>{{ filename }}</span><br>
+     <input id="image" type="file" name="image" style="display:none" v-on:change = "onFileSelected" />
+     <label>Description </label><br>
+     <textarea name="description"></textarea><br>
+     <button id="btn" type="submit" name="submit"  >Submit</button>
+    </form>
+    `,
+    data: function() {
+        return {
+            //year: (new Date).getFullYear()
+            //UploadForm:
+            filename:""
+        };
+    },
+    methods:
+    {
+    UploadForm: function()
+        {
+            let self=this;
+            let uploadForm=document.getElementById(uploadForm);
+            let form_data=new FormData(uploadForm);
+            fetch("/api/upload", {
+                method: 'POST',
+                body:form_data,
+                headers:
+                {
+                    'X-CSRFToken':token
+                },
+                credentials: 'same-origin'
+            })
+            .then(function (response) {
+            return response.json();
+             })
+            .then(function (jsonResponse) {
+            / display a success message/
+            self.messageFlag = true;
+            if (jsonResponse.hasOwnProperty('errors'))
+            {
+                self.errorFlag=true;
+                self.message=jsonResponse.errors;
+            }else if(jsonResponse.hasOwnProperty('message'))
+            {
+                self.errorFlag=false;
+                self.message="Upload Successful";
+                self.cleanForm();
+            }
+        })
+        .catch(function (error) {
+        console.log(error);
+        });
+        },
+        cleanForm: function()
+        {
+            let form=("#UploadForm")[0];
+            let self=this
+            form.description.value=""
+            form.image.value="";
+            self.filename="";
+        }
+    }
+});
+
 const Home = Vue.component('home', {
    template: `
     <div class="jumbotron">
